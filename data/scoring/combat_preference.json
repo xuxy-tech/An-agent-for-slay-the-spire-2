@@ -1,0 +1,21 @@
+{
+  "kind": "linear_preference",
+  "feature_version": "combat-preference-4",
+  "observation_mode": "simulated_hand_unordered_piles_v1",
+  "trained": false,
+  "ability_config": {
+    "realization": 0.35,
+    "discount": 0.85,
+    "max_horizon": 3,
+    "damage_per_turn": 18.0
+  },
+  "weights": {
+    "hp_change": 42.5,
+    "hp_risk": 30.0,
+    "enemy_hp_removed": 60.0,
+    "enemy_kills": 8.0,
+    "next_threat": 30.0,
+    "hand_energy_opportunity": 2.0,
+    "potion_cost": 8.0
+  }
+}

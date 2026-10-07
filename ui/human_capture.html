@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>人类采集 · STS2 Agent</title>
+  <link rel="stylesheet" href="/assets/human_capture.css">
+  <link rel="stylesheet" href="/assets/shared_ui.css">
+  <link rel="stylesheet" href="/assets/combat_comparison.css">
+  <script src="/assets/lucide.min.js" defer></script>
+  <script src="/assets/human_capture.js" defer></script>
+  <script src="/assets/combat_comparison.js" defer></script>
+</head>
+<body>
+  <header class="app-header">
+    <a class="brand" href="/"><i data-lucide="database-zap"></i>STS2 Agent</a>
+    <nav class="workspace-nav" aria-label="工作区"><a href="/">实战观察</a><a href="/human-capture" aria-current="page">学习</a></nav>
+    <span id="top-status">检查中</span>
+  </header>
+  <main>
+    <section class="readiness" aria-label="采集前置状态">
+      <div><span>采集 Mod</span><strong id="install-status">检查中</strong><small id="install-detail"></small></div>
+      <div><span>观察端口 8080</span><strong id="observer-status">未连接</strong><small id="observer-detail"></small></div>
+      <div><span>动作端口 9878</span><strong id="capture-status">未连接</strong><small id="capture-detail"></small></div>
+    </section>
+
+    <section class="capture-operation">
+      <div class="section-heading">
+        <div><h1>真实对局采集</h1><p id="message">等待状态检查</p></div>
+        <span id="mode" class="badge">就绪</span>
+      </div>
+      <div class="toolbar">
+        <button id="start" class="primary"><i data-lucide="circle-dot"></i>开始采集</button>
+        <button id="stop"><i data-lucide="square"></i>停止并封存</button>
+        <label>动作上限<input id="max-actions" type="number" min="1" max="100000" placeholder="不限"></label>
+        <span id="active-session" class="muted"></span>
+      </div>
+      <div id="install-action" class="install-action" hidden>
+        <strong>安装尚未完成</strong>
+        <code id="install-command"></code>
+      </div>
+      <p id="error" role="alert" hidden></p>
+    </section>
+
+    <div class="workspace">
+      <section class="sessions">
+        <div class="section-heading"><h2>采集会话</h2><button id="refresh-sessions" title="刷新会话" aria-label="刷新会话"><i data-lucide="refresh-cw"></i></button></div>
+        <div id="session-list" class="session-list"></div>
+        <p id="session-empty" class="empty">尚无采集会话</p>
+      </section>
+
+      <section class="session-detail">
+        <div class="section-heading"><div class="heading-inline"><h2>会话审计</h2><span id="audit-state" class="badge">未选择</span></div><button id="delete-incompatible" class="danger" title="Delete incompatible sessions" aria-label="Delete incompatible sessions"><i data-lucide="trash-2"></i><span>Delete incompatible</span></button><button id="delete-session" class="danger" title="删除所选真实对局" aria-label="删除所选真实对局"><i data-lucide="trash-2"></i><span>删除会话</span></button></div>
+        <dl class="metrics">
+          <div><dt>记录</dt><dd id="records">—</dd></div>
+          <div><dt>决策</dt><dd id="decisions">—</dd></div>
+          <div><dt>已稳定</dt><dd id="settled">—</dd></div>
+          <div><dt>补丁</dt><dd id="patches">—</dd></div>
+        </dl>
+        <h3>动作覆盖</h3><div id="actions" class="counts muted">—</div>
+        <h3>来源覆盖</h3><div id="sources" class="counts muted">—</div>
+        <h3>完整性</h3><div id="integrity" class="integrity muted">选择一个会话查看</div>
+      </section>
+    </div>
+
+    <section class="pipeline">
+      <div class="section-heading"><div><h2>回合学习</h2><p id="dataset-summary" class="muted">独立枚举结算叶节点，记录完整与预算受限的覆盖</p></div></div>
+      <div class="toolbar">
+        <button id="audit"><i data-lucide="scan-search"></i>Audit session</button>
+        <label class="check"><input id="strict" type="checkbox" checked>Coverage gate</label>
+        <button id="generate-current"><i data-lucide="refresh-cw"></i>生成回合叶节点</button>
+        <button id="join-current"><i data-lucide="git-compare"></i>生成示范比较样本</button>
+        <button id="train-current" class="primary"><i data-lucide="flask-conical"></i>训练评分参数</button>
+      </div>
+      <p class="muted">顺序：采集 → 生成回合叶节点 → 生成示范比较样本 → 训练。预算受限不等于完整枚举；人类示范不代表最优解。模型完成后进入下方列表。</p>
+      <div id="pipeline-progress-box" class="pipeline-progress" hidden><label id="pipeline-progress-label" for="pipeline-progress">准备中</label><progress id="pipeline-progress" max="100" value="0"></progress><span id="pipeline-progress-count" role="status"></span></div>
+      <pre id="result">{}</pre>
+    </section>
+
+    <section class="comparison-area" aria-label="战斗策略对比">
+      <div class="section-heading"><div><h2>战斗评分模型</h2><p>保存不同权重版本；编辑和比较都不会切换实战模型。仅显示兼容当前评分特征的训练模型。</p></div></div>
+      <div class="comparison-tools">
+        <label>从模型载入<select id="cmp-editor-source"></select></label>
+        <label>新版本名称<input id="cmp-model-name" maxlength="60" placeholder="例如：前期力量增强"></label>
+        <label>随机种子<input id="cmp-random-seed" value="1" aria-label="随机种子"></label>
+        <label>扰动幅度（%）<input id="cmp-random-percent" type="number" min="1" max="100" value="20"></label>
+        <button id="cmp-random" type="button">按种子生成</button>
+        <button id="cmp-save-model" type="button" class="primary">保存新版本</button>
+        <button id="cmp-rename-model" type="button">重命名所选版本</button>
+        <button id="cmp-delete-model" type="button" class="danger">删除所选保存版本</button>
+      </div>
+      <div id="cmp-weights" class="comparison-weights"></div>
+      <h3>Ability value estimate</h3>
+      <p class="muted">兑现系数与逐回合折扣参与学习；其余参数保留手动设置。训练结果会连同参数一起保存在模型中。</p>
+      <div id="cmp-ability-settings" class="comparison-weights"></div>
+      <details id="cmp-ability-advanced"><summary>Advanced settings / combat length</summary><div id="cmp-ability-advanced-settings" class="comparison-weights"></div></details>
+      <p id="cmp-model-message" class="comparison-message" role="status"></p>
+
+      <div class="section-heading comparison-subheading"><div><h2>同快照战斗对比</h2><p>每份快照由 A、B 从相同状态独立打到战斗结束；不合格样本单列。单次最多 48 份。</p></div></div>
+      <div class="comparison-tools">
+        <label>模型 A<select id="cmp-model-a"></select></label>
+        <label>模型 B<select id="cmp-model-b"></select></label>
+        <label>楼层范围<select id="cmp-act"><option value="all">全部幕</option><option value="1">第一幕</option><option value="2">第二幕</option><option value="3">第三幕</option></select></label>
+        <button id="cmp-select-all" type="button">选择当前列表</button>
+        <button id="cmp-select-none" type="button">清空选择</button>
+      </div>
+      <div id="cmp-snapshots" class="comparison-snapshots"></div>
+      <div class="comparison-tools comparison-run-controls">
+        <button id="cmp-start" class="primary" type="button">开始对比</button>
+        <button id="cmp-stop" type="button">停止任务</button>
+        <label>历史任务<select id="cmp-job-select"></select></label>
+        <span id="cmp-progress" role="status">尚未运行</span>
+      </div>
+      <p id="cmp-error" class="comparison-error" role="alert" hidden></p>
+      <div id="cmp-summary" class="comparison-summary"></div>
+      <div class="comparison-result-layout">
+        <div><h3>快照结果</h3><div id="cmp-pairs" class="comparison-pairs"></div></div>
+        <div><h3>单场详情</h3><div id="cmp-detail" class="comparison-detail muted">选择一份结果查看动作与首次分叉。</div></div>
+      </div>
+    </section>
+
+    <section class="task-log">
+      <div class="section-heading"><h2>任务日志</h2><span id="job-name" class="muted">无活动任务</span></div>
+      <pre id="log">等待任务</pre>
+    </section>
+  </main>
+</body>
+</html>

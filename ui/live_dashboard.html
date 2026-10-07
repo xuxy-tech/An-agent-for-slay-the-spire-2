@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>STS2 Agent 观察台</title>
+  <link rel="stylesheet" href="/assets/dashboard.css">
+  <link rel="stylesheet" href="/assets/deck_profile.css">
+  <link rel="stylesheet" href="/assets/shared_ui.css">
+  <script src="/assets/lucide.min.js" defer></script>
+  <script src="/assets/dashboard.js" defer></script>
+  <script src="/assets/deck_profile_editor.js" defer></script>
+  <script src="/assets/combat_snapshots.js" defer></script>
+  <script src="/assets/storage.js" defer></script>
+</head>
+<body>
+<main>
+  <header><div class="brand"><i data-lucide="activity"></i><h1>STS2 Agent <span>观察台</span></h1></div><span id="connection" class="muted">连接中</span></header>
+  <nav class="workspace-nav" aria-label="工作区"><a href="/" aria-current="page">实战观察</a><a href="/human-capture">学习</a></nav>
+  <div class="session-bar">
+    <label>运行记录 <select id="sessions"><option value="">当前运行</option></select></label>
+    <button id="live" title="返回当前运行" aria-label="返回当前运行"><i data-lucide="radio"></i></button>
+    <span id="view-context" class="view-context">当前记录</span>
+    <button id="import" title="打开本地 JSON 或 JSONL" aria-label="打开本地记录"><i data-lucide="folder-open"></i></button>
+    <input id="file" type="file" accept=".json,.jsonl" hidden>
+    <a id="download" class="button" title="下载结构化报告" aria-label="下载结构化报告"><i data-lucide="download"></i></a>
+    <a id="download-log" class="button" title="下载原始日志" aria-label="下载原始日志"><i data-lucide="file-json"></i></a>
+  </div>
+  <section class="operation" aria-label="当前运行控制">
+    <div class="operation-heading"><h2>当前运行</h2><div class="run-identifiers"><span id="live-run-id" class="muted">尚无当前局</span><span id="active-strategy" class="muted"></span></div></div>
+    <div class="status"><span id="mode" class="badge">就绪</span><span id="phase" class="muted"></span><span id="message"></span></div>
+    <p id="flow-state" class="muted"></p>
+    <div class="current-metrics" aria-label="当前游戏状态">
+      <div><span>当前界面</span><strong id="screen">—</strong></div>
+      <div><span>楼层 / 回合</span><strong id="position">—</strong></div>
+      <div><span>生命</span><strong id="hp">—</strong></div>
+      <div><span>金币</span><strong id="gold">—</strong></div>
+    </div>
+    <div class="control-grid">
+      <div class="control-card">
+        <h3>本局操作</h3>
+        <div class="control-actions">
+          <button id="start" class="primary"><i data-lucide="plus"></i>开始新局</button>
+          <button id="pause"><i data-lucide="pause"></i>暂停</button>
+          <button id="resume"><i data-lucide="play"></i>继续</button>
+          <button id="step"><i data-lucide="step-forward"></i>单步</button>
+          <button id="stop" class="danger"><i data-lucide="square"></i>停止 Agent</button>
+        </div>
+        <div class="secondary-actions"><h4>更多操作</h4><div class="control-actions">
+          <button id="continue" title="从已记录状态恢复当前局"><i data-lucide="history"></i>恢复已停止局</button>
+          <button id="restart" title="安全停止后重开"><i data-lucide="rotate-ccw"></i>重开一局</button>
+          <button id="menu"><i data-lucide="house"></i>返回主菜单</button>
+          <button id="shutdown"><i data-lucide="power"></i>关闭观察台</button>
+        </div></div>
+      </div>
+      <div class="control-card plan-card">
+        <h3>运行计划</h3>
+        <div class="plan-fields"><label>战斗策略 <select id="scoring-model"><option value="active">当前实战模型</option></select></label></div>
+        <p class="plan-hint muted">策略在开局时固定；连续运行沿用同一策略。可以在“学习”页保存或重命名策略。</p>
+        <div class="plan-fields"><label>模式 <select id="run-mode"><option value="single">单局</option><option value="batch">连续 N 局</option><option value="unlimited">无限连续</option></select></label>
+          <label id="batch-target-label">局数 N <input id="batch-target" type="number" min="1" step="1" value="10" inputmode="numeric"></label>
+          <button id="apply-plan" type="button">应用到当前局</button></div>
+        <p id="batch-progress" class="muted" role="status">单局运行</p>
+        <p class="plan-hint muted">当前局计作第 1 局；错误占名额。暂停保留进度，停止取消剩余局数。</p>
+      </div>
+    </div>
+    <details class="run-settings"><summary>运行参数</summary><div class="toolbar">
+      <label>回合动作上限 <input id="depth" type="number" min="1" max="16" value="12"></label>
+      <label>搜索软预算 ms <input id="search" type="number" min="100" max="60000" step="100" value="20000"></label>
+      <label>并发模式 <select id="worker-mode"><option value="adaptive">自适应</option><option value="fixed">固定</option></select></label>
+      <label>最大 worker <input id="workers" type="number" min="1" max="32" value="2"></label>
+      <label>动作间隔 ms <input id="delay" type="number" min="0" max="5000" step="100" value="700"></label>
+      <label>无进展超时 s <input id="stall" type="number" min="120" max="7200" value="900"></label>
+      <button id="save-config" title="保存运行参数"><i data-lucide="save"></i>保存参数</button><span id="config-saved" class="muted"></span>
+    </div></details>
+    <p id="limitation" class="muted"></p>
+    <p id="error" role="alert" hidden></p>
+  </section>
+  <section class="run-history">
+    <h2><button id="history-toggle" type="button" aria-expanded="false" aria-controls="history-body"><i data-lucide="chevron-down"></i>历史记录</button></h2>
+    <div id="history-body" class="history-body" hidden>
+      <div class="history-summary">
+        <div class="section-title"><h3>最近对局概览</h3><label>统计最近 <select id="history-count"><option>10</option><option>20</option><option>30</option><option>50</option></select> 局</label></div>
+        <p id="history-summary-status" class="muted" role="status">展开后读取历史记录</p>
+        <div class="history-summary-grid"><canvas id="history-pie" width="240" height="240" aria-label="历史结果饼图，可点击分类查看详情" tabindex="0"></canvas><div><div id="history-legend" class="history-legend"></div><div id="history-breakdown" class="history-breakdown"></div></div></div>
+      </div>
+      <h3 class="history-details-heading"><button id="history-details-toggle" type="button" aria-expanded="false" aria-controls="history-details-body"><i data-lucide="chevron-down"></i>全部详细记录</button></h3>
+      <div id="history-details-body" hidden>
+        <div id="history-scroll" class="history-scroll"><table><thead><tr><th>结束时间</th><th>结果</th><th>策略</th><th>楼层</th><th>卡组</th><th><span class="visually-hidden">操作</span></th></tr></thead><tbody id="run-history"></tbody></table></div>
+        <p id="history-load-status" class="muted" role="status"></p>
+      </div>
+    </div>
+  </section>
+  <section>
+    <section class="control-card" id="engine-consistency-panel">
+      <h2>双端引擎一致性</h2>
+      <p id="engine-consistency-status" class="muted" role="status">尚未检验；A/B 与 headless-only 对局已锁定。</p>
+      <button id="engine-consistency-run" type="button">使用当前快照检验</button>
+      <p id="engine-consistency-message" role="status"></p>
+      <div class="headless-controls">
+        <h3>仅后端真实对局</h3>
+        <p class="muted">通过一致性检验后可运行。沿用上方战斗策略、牌组和搜索参数；每局使用独立种子并写入历史记录。</p>
+        <div class="plan-fields"><label>总局数<input id="headless-count" type="number" min="1" max="1000" step="1" value="10"></label><label>并行局数<input id="headless-parallel" type="number" min="1" max="4" step="1" value="2"></label><button id="headless-start" type="button" class="primary">开始仅后端对局</button><button id="headless-stop" type="button" class="danger">停止批次</button></div>
+        <p id="headless-progress" role="status" class="muted">尚未启动</p><progress id="headless-progress-bar" max="100" value="0"></progress><p id="headless-message" role="alert"></p>
+      </div>
+    </section>
+    <details id="combat-snapshots-panel">
+      <summary>战斗快照</summary>
+      <p class="muted">Agent 在不同楼层和遭遇的稳定战斗决策点自动采集真实客户端快照，独立恢复通过后收入验证集；达到容量后只停止采集。旧版未验证快照不计入。验证覆盖根状态字段和 RNG，不保证后续所有动作一致。</p>
+      <p id="snapshot-coverage" role="status">正在读取验证集…</p>
+      <button id="snapshot-capture" type="button">手动采集当前战斗（需暂停）</button>
+      <button id="snapshot-refresh" type="button">刷新列表</button>
+      <p id="snapshot-message" role="status"></p>
+      <table><thead><tr><th>时间</th><th>楼层 / 回合</th><th>验证状态</th><th>目录 / 错误</th></tr></thead><tbody id="snapshot-list"></tbody></table>
+    </details>
+  </section>
+  <section class="deck-builder">
+    <div class="section-title"><h2><button id="profile-toggle" aria-expanded="true" aria-controls="profile-body"><i data-lucide="chevron-down"></i>自定义卡组</button></h2><div><button id="profile-reset" title="恢复烧血流样例"><i data-lucide="rotate-ccw"></i></button><button id="profile-save" class="primary"><i data-lucide="save"></i>保存配置</button></div></div>
+    <div id="profile-body">
+    <div class="profile-meta"><label>配置 ID<input id="profile-id"></label><label>名称<input id="profile-name"></label><span id="profile-summary" class="muted"></span></div>
+    <div class="profile-grid">
+      <div><div class="section-title"><h3>功能端口</h3><button id="profile-add-port" title="新增端口"><i data-lucide="plus"></i></button></div><div class="profile-table"><table><thead><tr><th>顺序</th><th>名称</th><th>目标</th><th>上限</th><th></th></tr></thead><tbody id="profile-ports"></tbody></table></div></div>
+      <div><div class="section-title"><h3>卡牌白名单</h3></div><div class="profile-tools"><input id="profile-card-search" placeholder="搜索中文、英文或卡牌 ID"></div><div id="profile-card-library" class="card-library"></div><div class="profile-table card-profile-table"><table><thead><tr><th>顺序</th><th>卡牌</th><th>上限</th><th>功能端口</th><th></th></tr></thead><tbody id="profile-cards"></tbody></table></div></div>
+    </div>
+    </div>
+  </section>
+  <section class="report-overview" aria-label="所查看记录概览">
+    <h2>记录分析</h2>
+    <div class="identity"><span id="identity">尚无运行记录</span><span id="config"></span></div>
+    <div class="metrics">
+      <div><span>报告内已完成战斗</span><strong id="combats">0</strong></div>
+      <div><span>已记录动作</span><strong id="action-count">0</strong></div><div><span>覆盖字段检查</span><strong id="parity-count">未验证</strong></div>
+    </div>
+    <div class="search-overview">
+      <div><h3>战斗搜索最终结果</h3><p class="muted">按实际发起的搜索决策统计；强制动作与计划复用另列。</p></div>
+      <canvas id="search-outcome-pie" width="180" height="180" aria-label="完全搜索、不完全搜索和 fallback 的比例"></canvas>
+      <div><div id="search-outcome-legend" class="search-outcome-legend"></div><p id="search-outcome-note" class="muted"></p></div>
+    </div>
+  </section>
+  <div class="workspace">
+    <section class="timeline">
+      <div class="section-title"><h2>动作时间线</h2><label><input id="follow" type="checkbox" checked>跟随最新</label></div>
+      <div class="table-scroll"><table><thead><tr><th>步骤</th><th>动作</th><th>决策 ms</th><th>执行状态</th><th>验证</th></tr></thead><tbody id="timeline"></tbody></table></div>
+      <p id="empty" class="empty">尚无动作记录</p>
+    </section>
+    <section class="inspector">
+      <div class="section-title"><h2 id="detail-title">决策详情</h2><span id="detail-status" class="badge"></span></div>
+      <p id="chosen" class="chosen">—</p><p id="decision-kind" class="muted"></p>
+      <div class="decision-summary"><span id="search-status">搜索状态未记录</span><span id="verification-brief">未验证</span></div>
+      <details id="search-group" class="detail-group"><summary>搜索与评分</summary>
+        <p id="search-quality" class="muted"></p>
+        <h3>本回合搜索记录</h3><div id="turn-searches" class="turn-searches muted">当前步骤不属于回合搜索</div>
+        <h3>搜索候选</h3><div id="candidates" class="candidates"></div>
+        <h3>评分理由</h3><div id="score-reasons" class="score-reasons muted">无评分分项</div>
+      </details>
+      <details id="execution-group" class="detail-group"><summary>执行与状态变化</summary>
+        <dl id="timings" class="timings"></dl>
+        <div id="state-change" class="state-change muted">—</div>
+        <div id="reward-receipt" class="state-change"></div>
+      </details>
+      <details id="verification-group" class="detail-group"><summary>一致性检查与错误</summary>
+        <div id="verification" class="muted">未验证</div><div id="differences"></div>
+      </details>
+      <details id="deck-group" class="detail-group"><summary>卡组构筑审计</summary><div id="deck-audit" class="muted">本步骤没有抓牌审计</div></details>
+      <details id="raw-group" class="detail-group"><summary>动作与状态原始数据</summary><pre id="raw">{}</pre></details>
+    </section>
+  </div>
+  <section class="storage-management">
+    <details id="storage-panel">
+      <summary>存储管理</summary>
+      <p class="muted">历史记录归档后仍可查看完整对局。快照保存独立的战斗证据；清理过期快照或回放缓存不会影响已归档的对局。</p>
+      <div class="storage-actions"><button id="storage-refresh" type="button">刷新用量</button><button id="storage-clear-stale" type="button">删除过期快照</button><button id="storage-clear-cache" type="button">清空回放缓存</button></div>
+      <p id="storage-summary" role="status">展开后读取用量</p>
+      <h3>已归档对局</h3>
+      <div id="storage-archives" class="storage-archives"></div>
+    </details>
+  </section>
+</main>
+<dialog id="card-preview" class="card-preview">
+  <button id="card-preview-close" class="card-preview-close" title="关闭" aria-label="关闭"><i data-lucide="x"></i></button>
+  <div class="card-preview-grid">
+    <div class="card-preview-art">
+      <img id="card-preview-image" alt="">
+      <div id="card-preview-fallback" class="card-preview-fallback"><i data-lucide="image-off"></i></div>
+    </div>
+    <div class="card-preview-copy">
+      <div class="card-preview-heading"><span id="card-preview-cost" class="card-cost"></span><div><h2 id="card-preview-name"></h2><p id="card-preview-name-en"></p></div></div>
+      <div id="card-preview-meta" class="card-preview-meta"></div>
+      <div id="card-preview-level" class="card-preview-level" role="group" aria-label="卡牌等级">
+        <button type="button" data-upgraded="false" aria-pressed="true">基础</button>
+        <button type="button" data-upgraded="true" aria-pressed="false">升级</button>
+      </div>
+      <div class="card-description"><strong>中文描述</strong><p id="card-preview-description-zh"></p></div>
+      <div class="card-description"><strong>English</strong><p id="card-preview-description-en"></p></div>
+      <button id="card-preview-add" class="primary"><i data-lucide="plus"></i>加入白名单</button>
+    </div>
+  </div>
+</dialog>
+</body>
+</html>

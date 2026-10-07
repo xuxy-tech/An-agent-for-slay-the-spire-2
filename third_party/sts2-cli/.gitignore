@@ -1,0 +1,15 @@
+decompiled/
+lib/
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.idea/
+*.DotSettings
+/python/__pycache__/
+*.pyc
+.DS_Store
+.obsidian/
+logs/
+saves/*

@@ -1,0 +1,353 @@
+{
+  "schema_version": 2,
+  "id": "ironclad_self_damage",
+  "name": "Ironclad Self Damage",
+  "character": "IRONCLAD",
+  "combat_coefficients": {
+    "player_hp_loss_delta": 0.75,
+    "player_block_delta": 0.35,
+    "unblocked_damage_delta": -0.25,
+    "power_stock_delta": 1.5,
+    "strength_future_delta": 1
+  },
+  "deck_size": {
+    "target": 19,
+    "maximum": 23,
+    "optional_max_by_act": {
+      "1": 17,
+      "2": 20,
+      "3": 23
+    }
+  },
+  "ports": [
+    {
+      "id": "attack",
+      "name": "Immediate damage",
+      "target": 2,
+      "maximum": 6
+    },
+    {
+      "id": "defense",
+      "name": "Block",
+      "target": 3,
+      "maximum": 7
+    },
+    {
+      "id": "draw",
+      "name": "Card flow",
+      "target": 3,
+      "maximum": 9
+    },
+    {
+      "id": "aoe",
+      "name": "Area damage",
+      "target": 1,
+      "maximum": 3
+    },
+    {
+      "id": "energy",
+      "name": "Energy",
+      "target": 1,
+      "maximum": 3
+    },
+    {
+      "id": "trigger",
+      "name": "Self-damage trigger",
+      "target": 3,
+      "maximum": 7
+    },
+    {
+      "id": "payoff",
+      "name": "Self-damage payoff",
+      "target": 2,
+      "maximum": 4
+    },
+    {
+      "id": "scaling",
+      "name": "Scaling",
+      "target": 1,
+      "maximum": 3
+    },
+    {
+      "id": "vulnerable",
+      "name": "Vulnerable",
+      "target": 1,
+      "maximum": 2
+    },
+    {
+      "id": "sustain",
+      "name": "Healing",
+      "target": 1,
+      "maximum": 2
+    }
+  ],
+  "cards": [
+    {
+      "id": "NOT_YET",
+      "max_copies": 1,
+      "ports": [
+        "sustain"
+      ],
+      "selection": {
+        "always_take": true
+      }
+    },
+    {
+      "id": "OFFERING",
+      "max_copies": 1,
+      "ports": [
+        "energy",
+        "trigger",
+        "draw"
+      ],
+      "selection": {
+        "priority": 0
+      }
+    },
+    {
+      "id": "POMMEL_STRIKE",
+      "max_copies": 2,
+      "ports": [
+        "attack",
+        "draw"
+      ],
+      "selection": {
+        "priority": 1,
+        "second_copy_max_strikes": 3
+      }
+    },
+    {
+      "id": "HEMOKINESIS",
+      "max_copies": 1,
+      "ports": [
+        "attack",
+        "trigger"
+      ],
+      "selection": {
+        "priority": 1,
+        "repeatable_trigger": true
+      }
+    },
+    {
+      "id": "SHRUG_IT_OFF",
+      "max_copies": 2,
+      "ports": [
+        "defense",
+        "draw"
+      ],
+      "selection": {
+        "priority": 1
+      }
+    },
+    {
+      "id": "BREAKTHROUGH",
+      "max_copies": 2,
+      "ports": [
+        "attack",
+        "trigger",
+        "aoe"
+      ],
+      "selection": {
+        "priority": 1,
+        "repeatable_trigger": true
+      }
+    },
+    {
+      "id": "MASTER_OF_STRATEGY",
+      "max_copies": 1,
+      "ports": [
+        "draw"
+      ],
+      "selection": {
+        "priority": 1
+      }
+    },
+    {
+      "id": "FINESSE",
+      "max_copies": 1,
+      "ports": [
+        "defense",
+        "draw"
+      ],
+      "selection": {
+        "priority": 1
+      }
+    },
+    {
+      "id": "FLASH_OF_STEEL",
+      "max_copies": 1,
+      "ports": [
+        "attack",
+        "draw"
+      ],
+      "selection": {
+        "priority": 1
+      }
+    },
+    {
+      "id": "CONFLAGRATION",
+      "max_copies": 1,
+      "ports": [
+        "attack",
+        "aoe"
+      ],
+      "selection": {
+        "priority": 2
+      }
+    },
+    {
+      "id": "CRIMSON_MANTLE",
+      "max_copies": 1,
+      "ports": [
+        "defense",
+        "trigger"
+      ],
+      "selection": {
+        "priority": 2,
+        "repeatable_trigger": true
+      }
+    },
+    {
+      "id": "INFERNO",
+      "max_copies": 1,
+      "ports": [
+        "payoff",
+        "trigger",
+        "aoe"
+      ],
+      "selection": {
+        "priority": 2,
+        "repeatable_trigger": true
+      }
+    },
+    {
+      "id": "BRAND",
+      "max_copies": 1,
+      "ports": [
+        "trigger",
+        "scaling"
+      ],
+      "selection": {
+        "priority": 2
+      }
+    },
+    {
+      "id": "BATTLE_TRANCE",
+      "max_copies": 1,
+      "ports": [
+        "draw"
+      ],
+      "selection": {
+        "priority": 2
+      }
+    },
+    {
+      "id": "IMPERVIOUS",
+      "max_copies": 1,
+      "ports": [
+        "defense"
+      ],
+      "selection": {
+        "priority": 2
+      }
+    },
+    {
+      "id": "BLOODLETTING",
+      "max_copies": 1,
+      "ports": [
+        "energy",
+        "trigger"
+      ],
+      "selection": {
+        "priority": 2,
+        "repeatable_trigger": true
+      }
+    },
+    {
+      "id": "IRON_WAVE",
+      "max_copies": 1,
+      "ports": [
+        "attack",
+        "defense"
+      ],
+      "selection": {
+        "priority": 3,
+        "act_max": 1,
+        "early_filler": true
+      }
+    },
+    {
+      "id": "TREMBLE",
+      "max_copies": 1,
+      "ports": [
+        "vulnerable"
+      ],
+      "selection": {
+        "priority": 3,
+        "act_max": 1,
+        "early_filler": true
+      }
+    },
+    {
+      "id": "ARMAMENTS",
+      "max_copies": 1,
+      "ports": [
+        "defense"
+      ],
+      "selection": {
+        "priority": 3,
+        "act_max": 1,
+        "early_filler": true
+      }
+    },
+    {
+      "id": "SPITE",
+      "max_copies": 1,
+      "ports": [
+        "attack",
+        "payoff",
+        "draw"
+      ],
+      "selection": {
+        "priority": 3
+      }
+    },
+    {
+      "id": "RUPTURE",
+      "max_copies": 1,
+      "ports": [
+        "payoff",
+        "scaling"
+      ],
+      "selection": {
+        "priority": 3,
+        "min_repeatable_triggers": 2
+      }
+    },
+    {
+      "id": "INFLAME",
+      "max_copies": 1,
+      "ports": [
+        "scaling"
+      ],
+      "selection": {
+        "priority": 3,
+        "act_max": 2
+      }
+    },
+    {
+      "id": "RAGE",
+      "max_copies": 1,
+      "ports": [
+        "defense"
+      ],
+      "selection": {
+        "priority": 4,
+        "min_nonstarter_attacks": 3
+      }
+    }
+  ],
+  "selection_rules": {
+    "max_early_fillers": 2
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "id": "STS2RngBridge",
+  "name": "STS2 RNG Bridge",
+  "author": "Vesper",
+  "description": "Read-only RNG state export for STS2 Agent parity diagnostics.",
+  "version": "0.1.0",
+  "has_pck": false,
+  "has_dll": true,
+  "affects_gameplay": false
+}

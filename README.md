@@ -1,2 +1,36 @@
-# An-agent-for-slay-the-spire-2
-A former course project for AI, which now enhancing performance, speed and visualization.
+# Slay the Spire 2 Agent
+
+一个用于《杀戮尖塔 2》的自主对局与战斗决策研究项目。Agent 使用游戏状态转移引擎搜索战斗动作，并提供构筑策略、可见对局观察台、仅后端批量运行、战斗快照验证和策略对比功能。
+
+## 代码结构
+
+- `controller/`：战斗搜索、评分、构筑、非战斗决策与一致性检查。
+- `cli/`：与 headless 引擎通信。
+- `scripts/`：Windows 安装、启动、验证和分析入口。
+- `mod/`：战斗快照与 RNG 桥接 Mod 的源码。
+- `ui/`：本地观察台页面。
+- `tests/`：自动化测试。
+- `third_party/sts2-cli/`：基于 [sts2-cli](https://github.com/wuhao21/sts2-cli) 的 headless 引擎源码；其许可证见 `third_party/sts2-cli/LICENSE`。
+
+`data/deck_profiles/` 和 `data/scoring/` 提供默认策略配置。个人对局日志、快照、训练原始数据、游戏 DLL 和编译产物不包含在仓库中。
+
+## 在 Windows 上运行
+
+需要自行安装《杀戮尖塔 2》、Conda 和 .NET 9 SDK。运行库从本机游戏安装目录复制，不随项目分发。
+
+```powershell
+.\scripts\setup_windows.ps1 -GameDirectory "<游戏安装目录>"
+conda activate sts2-agent
+.\scripts\smoke.ps1
+python -m scripts.live_dashboard
+```
+
+观察台默认地址为 `http://127.0.0.1:8765/`。游戏更新后，先退出游戏，再用 `setup_windows.ps1 -RefreshGameRuntime -GameDirectory "<游戏安装目录>"` 刷新本机运行库。
+
+可见客户端模式还需要与游戏版本匹配的观察 Mod `STS2AIAgent.dll`，以及本仓库 `mod/` 中的组件；观察 Mod 的源码和二进制均不在本仓库。仅后端模式须先通过本机引擎一致性门禁。首次安装 Mod 或切换游戏版本后，应先运行验证，再开展长时间对局。
+
+## 范围
+
+搜索采用有限预算，会裁剪分支；快照可恢复也不保证整场战斗回放都通过。项目将正常战败、搜索回退和协议错误分别记录，不把一次烟测视为完整正确性证明。运行结果写入本机 `logs/`，默认不进入版本控制。
+
+本项目不是 Mega Crit 的官方产品。《杀戮尖塔 2》及其游戏资源归原权利人所有；项目不分发游戏程序集。

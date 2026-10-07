@@ -1,0 +1,71 @@
+/* Shared navigation and type scale for the observation and learning pages. */
+body {
+  font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+h1 { font-size: 22px; line-height: 1.3; }
+h2 { font-size: 16px; line-height: 1.4; }
+h3 { font-size: 14px; line-height: 1.4; }
+button, input, select { font-size: 14px; }
+table { font-size: 13px; }
+#connection, .current-metrics span, .metrics dt, .legend,
+.card-identity small, .port-chips label, .card-preview-meta,
+.card-description strong { font-size: 12px; }
+.card-identity strong { font-size: 13px; }
+.workspace-nav {
+  display: flex;
+  align-items: center;
+  align-self: auto;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 0;
+  font-size: 14px;
+}
+main > .workspace-nav { margin: 14px 0 2px; }
+.workspace-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 7px 14px;
+  border: 1px solid #dce3df;
+  border-radius: 6px;
+  color: #42534b;
+  background: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.workspace-nav a:hover { border-color: #8ebda4; background: #f1f8f3; }
+.workspace-nav a[aria-current="page"] {
+  border-color: #167153;
+  color: #126647;
+  background: #eaf5ee;
+}
+.workspace-nav a:focus-visible { outline: 2px solid #167153; outline-offset: 2px; }
+.secondary-actions {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.secondary-actions h4 {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+@media (max-width: 850px) {
+  .app-header .workspace-nav { gap: 8px; min-height: 0; }
+  .app-header .brand { font-size: 17px; }
+}
+@media (max-width: 480px) {
+  main > header { flex-wrap: wrap; gap: 5px; padding: 14px 0 10px; }
+  main > header .brand { width: 100%; }
+  main > header h1 { white-space: nowrap; }
+  main > header #connection { margin-left: 24px; }
+  main > .workspace-nav { margin-top: 10px; }
+  .workspace-nav { width: 100%; }
+  .workspace-nav a { flex: 1; justify-content: center; }
+  .app-header .workspace-nav { width: auto; flex: 1 1 100%; padding-bottom: 10px; }
+}
+.pipeline-progress{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;margin:.75rem 0}.pipeline-progress[hidden]{display:none}.pipeline-progress progress{width:min(320px,100%);height:.9rem}

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>战斗沙盒 · STS2 Agent</title>
+  <link rel="stylesheet" href="/assets/sandbox.css">
+  <script src="/assets/lucide.min.js" defer></script><script src="/assets/sandbox.js" defer></script>
+</head>
+<body>
+  <header class="app-header"><a class="brand" href="/"><i data-lucide="swords"></i>STS2 Agent</a>
+    <nav aria-label="工作区"><a href="/">实战观察</a><a href="/human-capture">人类采集</a><a href="/sandbox" aria-current="page">战斗沙盒</a></nav>
+    <span id="job-status" role="status">准备中</span>
+    <a href="/sandbox/guide" target="_blank" title="使用说明" aria-label="使用说明"><i data-lucide="book-open"></i></a>
+    <button id="export" title="导出完整标注数据" aria-label="导出完整标注数据"><i data-lucide="download"></i></button>
+  </header>
+  <main>
+    <aside class="scene-sidebar">
+      <div class="section-heading"><h1>场景</h1><button id="new-scene" title="构造场景" aria-label="构造场景"><i data-lucide="plus"></i></button></div>
+      <input id="scene-filter" type="search" aria-label="筛选场景" placeholder="筛选场景">
+      <div class="segmented" id="source-filter"><button data-source="all" aria-pressed="true">全部</button><button data-source="recorded" aria-pressed="false">实战</button><button data-source="generated" aria-pressed="false">构造</button></div>
+      <div id="scene-list" class="scene-list"></div>
+      <button id="resume-draft" class="wide" hidden><i data-lucide="history"></i>恢复上次草稿</button>
+    </aside>
+    <section class="sandbox-workspace">
+      <div id="error" role="alert" hidden></div>
+      <div class="collection-toolbar">
+        <div class="segmented" id="annotation-mode"><button data-mode="fast" aria-pressed="true">快速采集</button><button data-mode="compare" aria-pressed="false">方案复核</button></div>
+        <label>题源<select id="batch-source"><option value="random">随机场景</option><option value="existing">已有待标题</option></select></label>
+        <label>构筑<select id="batch-stage"><option value="mixed">混合阶段</option><option value="early">前期</option><option value="mid">中期</option><option value="late">后期</option></select></label>
+        <label>起点<select id="batch-position"><option value="mixed">开局 / 中途混合</option><option value="start">回合开始</option><option value="mid">回合中途</option></select></label>
+        <button id="next-scene" title="加载下一题"><i data-lucide="arrow-right"></i>下一题</button><span id="collection-count">已标 0 题 · 0 步</span>
+      </div>
+      <div id="submission-receipt" role="status" hidden></div>
+      <section class="agent-advice" aria-label="当前 Agent 建议">
+        <div class="advice-toolbar"><div><strong>当前评分器</strong><span id="active-scorer" class="advice-meta">—</span></div>
+          <button id="agent-hint" class="primary"><i data-lucide="bot"></i>查看当前 Agent 选择</button></div>
+        <div id="hint-result" hidden>
+          <div class="hint-heading"><strong id="hint-first"></strong><span id="hint-verification"></span></div>
+          <p id="hint-line"></p><p id="hint-metrics" class="advice-meta"></p>
+          <details><summary>候选与评分明细</summary><div id="hint-candidates"></div><div id="hint-scores"></div></details>
+        </div>
+      </section>
+      <div class="battle-heading"><div><h2 id="scene-title">选择场景</h2><div class="metadata"><span id="stage-badge">—</span><span>手牌可见</span><span id="mode-badge">未开始</span></div></div>
+        <div class="tools"><span id="position-badge"></span><button id="checkpoint" title="将当前局面存为新题" aria-label="将当前局面存为新题"><i data-lucide="pin"></i></button><button id="undo" title="撤销" aria-label="撤销"><i data-lucide="undo-2"></i></button><button id="redo" title="重做" aria-label="重做"><i data-lucide="redo-2"></i></button><button id="reset" title="重置场景" aria-label="重置场景"><i data-lucide="rotate-ccw"></i></button><span id="turn-label">回合 —</span></div>
+      </div>
+      <details id="prelude-details" hidden><summary id="prelude-summary">起点前行动</summary><ol id="prelude-actions"></ol></details>
+      <div id="battle" class="battle">
+        <div id="enemy-list" class="enemy-list"></div>
+        <div class="player-bar"><div class="player-identity"><i data-lucide="shield"></i><strong>铁甲战士</strong></div>
+          <span class="health"><i data-lucide="heart"></i><b id="player-hp">—</b></span>
+          <span class="energy"><i data-lucide="zap"></i><b id="player-energy">—</b></span>
+          <span class="block"><i data-lucide="shield-check"></i><b id="player-block">—</b></span>
+          <div id="player-powers" class="powers"></div><div id="player-potions" class="powers"></div><span id="terminal"></span>
+        </div>
+        <div class="hand-heading"><h3>手牌</h3><button id="cancel-target" hidden><i data-lucide="x"></i>取消目标</button><button id="end-turn" class="primary"><i data-lucide="arrow-right"></i>结束回合</button></div>
+        <div id="hand" class="hand"></div>
+      </div>
+      <div class="review-grid" id="review-grid">
+        <section class="trajectory"><div class="section-heading"><h3>当前方案</h3><button id="save-plan" class="primary"><i data-lucide="save"></i>保存</button></div>
+          <input id="plan-name" aria-label="方案名称" placeholder="方案名称"><ol id="action-list"></ol>
+          <details><summary>评分明细 · 初始权重</summary><div id="feature-list"></div></details>
+        </section>
+        <section id="quick-annotation" class="annotations">
+          <div class="section-heading"><h3>人工示范</h3><span id="demo-step-count">0 步</span></div>
+          <div class="annotation-fields"><label>置信度<select id="demo-confidence"><option value="low">低</option><option value="medium" selected>中</option><option value="high">高</option></select></label><input id="demo-note" placeholder="备注（可选）" aria-label="示范备注"></div>
+          <div class="quick-actions"><button id="save-demo"><i data-lucide="save"></i>保存标注</button><button id="save-next" class="primary"><i data-lucide="check"></i>保存并下一题</button><button id="skip-scene"><i data-lucide="skip-forward"></i>不确定，跳过</button></div>
+        </section>
+        <section class="annotations" id="comparison-panel" hidden><div class="section-heading"><h3>方案比较</h3><button id="agent-plan"><i data-lucide="bot"></i>Agent方案</button></div>
+          <div class="plan-selectors"><label>方案 A<select id="plan-a"></select></label><label>方案 B<select id="plan-b"></select></label></div>
+          <div id="plan-comparison" class="plan-comparison"></div>
+          <fieldset class="preference"><legend>结果偏好</legend><label><input type="radio" name="preference" value="a">A 更好</label><label><input type="radio" name="preference" value="b">B 更好</label><label><input type="radio" name="preference" value="tie">等价</label><label><input type="radio" name="preference" value="unsure">不确定</label></fieldset>
+          <div class="annotation-fields"><label>置信度<select id="confidence"><option value="low">低</option><option value="medium" selected>中</option><option value="high">高</option></select></label><input id="annotation-note" placeholder="判断理由（可选）" aria-label="判断理由"></div>
+          <div class="annotation-footer"><span id="label-count">0 条标注</span><button id="save-label" class="primary"><i data-lucide="check"></i>保存标注</button></div>
+        </section>
+      </div>
+    </section>
+  </main>
+  <dialog id="scene-dialog"><form id="scene-form">
+    <div class="section-heading"><h2>构造场景</h2><button type="button" id="close-scene" title="关闭" aria-label="关闭"><i data-lucide="x"></i></button></div>
+    <div class="form-grid"><label>场景名称<input name="title" placeholder="可选"></label><label>构筑阶段<select name="stage"><option value="early">前期</option><option value="mid" selected>中期</option><option value="late">后期</option></select></label>
+      <label>敌方遭遇<select name="encounter" id="encounter-options"></select></label><label>随机种子<input name="seed" placeholder="留空随机"></label>
+      <label>玩家生命<input name="hp" type="number" min="1" max="80" value="60"></label><label>起始能量<input name="energy" type="number" min="0" max="10" value="3"></label>
+      <label>每个敌人生命<input name="enemy_hp" type="number" min="0" max="999" value="0" title="0 使用遭遇原始生命"></label><label class="checkbox"><input name="upgrade_hand" type="checkbox">起始手牌升级</label></div>
+    <div class="form-grid scene-position-controls"><label>标注起点<select name="position"><option value="start">回合开始</option><option value="mid">回合中途</option><option value="mixed">随机位置</option></select></label><label>前置出牌上限<input name="warmup_steps" type="number" min="1" max="8" value="2"></label></div>
+    <details><summary>指定起始手牌</summary><input id="hand-search" type="search" placeholder="搜索白名单卡牌" aria-label="搜索白名单卡牌"><div id="picked-hand" class="picked-hand"></div><div id="hand-library" class="hand-library"></div></details>
+    <div class="dialog-footer"><button type="submit" id="generate" class="primary"><i data-lucide="shuffle"></i>生成场景</button></div>
+  </form></dialog>
+  <dialog id="card-dialog"><button id="close-card" class="dialog-close" title="关闭" aria-label="关闭"><i data-lucide="x"></i></button><div class="card-detail"><img id="detail-art" alt=""><div><h2 id="detail-name"></h2><p id="detail-type"></p><p id="detail-description"></p></div></div></dialog>
+  <dialog id="selection-dialog"><h2>选择卡牌</h2><p id="selection-prompt"></p><div id="selection-options"></div><button id="confirm-selection" class="primary"><i data-lucide="check"></i>确认选择</button><button id="reset-selection"><i data-lucide="rotate-ccw"></i>重置场景</button></dialog>
+</body>
+</html>

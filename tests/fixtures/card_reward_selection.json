@@ -1,0 +1,17 @@
+{
+  "screen": "CARD_SELECTION",
+  "in_combat": false,
+  "available_actions": ["resolve_rewards", "collect_rewards_and_proceed", "choose_reward_card", "skip_reward_cards", "select_deck_card"],
+  "reward": {
+    "pending_card_choice": true,
+    "can_proceed": false,
+    "rewards": [],
+    "card_options": [
+      {"index": 0, "card_id": "HAVOC"},
+      {"index": 1, "card_id": "BLOOD_WALL"},
+      {"index": 2, "card_id": "BLOODLETTING"}
+    ],
+    "alternatives": [{"index": 0}]
+  },
+  "selection": {"kind": "deck_card_select", "min_select": 0, "max_select": 0}
+}
